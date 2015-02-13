@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" href="http://fastly.github.io/epoch/css/epoch.css">
+		<script src="http://fastly.github.io/epoch/js/jquery.js"></script>
+		<script src="http://fastly.github.io/epoch/js/d3.js"></script>
+		<script src="http://fastly.github.io/epoch/js/epoch.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/async/0.9.0/async.js"></script>
+
+	</head>
+	<body >
+
+	</body>
+
+	<script>
+		var push = new WebSocket("ws://127.0.0.1:4002/metrics");
+		var pull = new WebSocket("ws://127.0.0.1:4001/");
+		var chart = {};
+
+		pull.onmessage = function(event) {
+			var json = JSON.parse(event.data);
+			if (chart[json.group])
+				chart[json.group].push(json.results.map(function(update) {
+					return {
+						time : update[0],
+						y : update[1]
+					};
+				}));
+		};
+
+		function buildCharts(type, sessions) {
+			console.log(type)
+			$('body').append('<p>' + type + '<div id="' + type + '" class="epoch category20" style="width: 100%; height: 200px;"></div></p>')
+			async.parallel(sessions.map(function(item) {
+				//console.log(item)
+				return function(cb) {
+					$.getJSON('http://localhost:4001/metric/' + item.token + '?from=a minute ago', function(data) {
+						cb(null, data);
+					});
+					pull.send(JSON.stringify({
+						event : 'start',
+						group : type,
+						schema : item.token
+					}));
+				};
+			}), function(err, results) {
+
+				chart[type] = $('#' + type).epoch({
+					type : 'time.line',
+					axes : ['right', 'bottom', 'left'],
+					data : results.map(function(data, index) {
+						return {
+							label : sessions[index].key,
+							values : data.map(function(i) {
+								return {
+									time : i[0],
+									y : i[1]
+								};
+							})
+						};
+					}),
+					pixelRatio : 1
+				});
+				console.log(chart[type])
+			});
+
+		}
+
+		$(function() {
+
+			var list = ['2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.memory.usage', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.memory.working_set', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.cpu.total', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.cpu.core.0', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.cpu.core.1', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.cpu.core.2', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.cpu.core.3', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.cpu.user', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.cpu.system', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.network.tx_bytes', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.network.rx_bytes', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.network.tx_errors', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.network.rx_errors', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_service_bytes.async', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_service_bytes.read', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_service_bytes.sync', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_service_bytes.total', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_service_bytes.write', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_serviced.async', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_serviced.read', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_serviced.sync', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_serviced.total', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_serviced.write', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_queued.async', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_queued.read', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_queued.sync', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_queued.total', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_queued.write', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.sectors.count', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_service_time.async', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_service_time.read', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_service_time.sync', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_service_time.total', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_service_time.write', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_wait_time.async', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_wait_time.read', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_wait_time.sync', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_wait_time.total', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_wait_time.write', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_merged.async', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_merged.read', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_merged.sync', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_merged.total', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_merged.write', '2ff6b52d328cf55dc98ce5e924afd959dea20aaeee6b61e569e23e8641a918bb.io_time.count']
+			var _list = {}
+			list.forEach(function(token) {
+				token = token.split('.');
+				var item = {};
+				item.token = token.shift();
+				item.group = token.shift();
+
+				if (token.length == 2) {
+					item.key = token.join('.');
+					item.token = item.token + '.' + item.group + '.' + item.key
+					item.key = item.key.split('.').join('_');
+
+					item.group = item.group + 'cores'
+				} else {
+					item.key = token.join('.');
+					item.token = item.token + '.' + item.group + '.' + item.key
+
+				}
+				if (!_list[item.group]) {
+					_list[item.group] = [];
+				}
+				_list[item.group].push(item)
+			});
+			setTimeout(function() {
+
+				Object.keys(_list).forEach(function(group) {
+					buildCharts(group, _list[group])
+				});
+			}, 3000);
+
+		});
+	</script>
+</html>
