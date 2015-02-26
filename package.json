@@ -7,8 +7,7 @@
 		"async": "^0.9.0",
 		"hyperquest": "^1.0.1",
 		"concat-stream": "^1.4.7",
-		"node-statsd": "^0.1.1",
-		"metrics-server": "^0.1.4"
+		"node-statsd": "^0.1.1"
 	},
 	"devDependencies": {},
 	"scripts": {
