@@ -1,0 +1,28 @@
+{
+	"name": "cadvisor-to-metric-server",
+	"version": "0.0.1",
+	"description": "Collect metrics and send them to graphite",
+	"main": "lib/cadvisor.js",
+	"dependencies": {
+		"async": "^0.9.0",
+		"hyperquest": "^1.0.1",
+		"concat-stream": "^1.4.7",
+		"node-statsd": "^0.1.1",
+		"metrics-server": "^0.1.4"
+	},
+	"devDependencies": {},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/MangoRaft/cadvisor-to-metric-server.git"
+	},
+	"keywords": ["graphite", "cadvisor"],
+	"author": "Tim <mangoraft@gmail.com>",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/MangoRaft/cadvisor-to-metric-server/issues"
+	},
+	"homepage": "https://github.com/MangoRaft/cadvisor-to-metric-server"
+}
